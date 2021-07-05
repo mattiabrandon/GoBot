@@ -1,42 +1,47 @@
-// Package gobot provides an easy to use interface to interact with
-// the BotAPI.
 package gobot
 
 import (
 	"encoding/json"
 	"log"
+	"reflect"
 
 	"github.com/valyala/fasthttp"
 )
 
-// GoBot is the main struct of the gobot package.
 type GoBot struct {
 	client   *fasthttp.Client
 	Timeout  int
 	baseURL  string
-	handlers []func(bot *GoBot, update *Update)
+	handlers []Handler
 }
 
-// Init is the function used to create the gobot main instance.
-func Init(token string) (*GoBot, error) {
+type Handler struct {
+	updateType interface{}
+	callback   func(bot *GoBot, update *Update)
+}
+
+func Init(token string) *GoBot {
 	log.Println("Copyright (c) 2020 Mattia Brandon <https://github.com/mattiabrandon>")
 	bot := GoBot{
 		client:   &fasthttp.Client{},
 		Timeout:  12,
 		baseURL:  "https://api.telegram.org/bot" + token + "/",
-		handlers: []func(bot *GoBot, update *Update){},
+		handlers: []Handler{},
 	}
-	getMe, err := bot.GetMe()
-
-	if err != nil {
-		return nil, err
-	}
-	log.Printf("Logged in as %s (%d)\n", getMe.Username, getMe.ID)
-	return &bot, nil
+	return &bot
 }
 
-// Request is the function used to call all the methods from the BotAPI
-// and return their values.
+func InitTimeout(token string, timeout int) *GoBot {
+	log.Println("Copyright (c) 2020 Mattia Brandon <https://github.com/mattiabrandon>")
+	bot := GoBot{
+		client:   &fasthttp.Client{},
+		Timeout:  timeout,
+		baseURL:  "https://api.telegram.org/bot" + token + "/",
+		handlers: []Handler{},
+	}
+	return &bot
+}
+
 func (bot *GoBot) Request(method string, params interface{}) (json.RawMessage, error) {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
@@ -72,20 +77,20 @@ func (bot *GoBot) Request(method string, params interface{}) (json.RawMessage, e
 	return decodedBody.Result, nil
 }
 
-// AddHandler is the function used to add an updates handler
-// to the list.
-func (bot *GoBot) AddHandler(handler func(bot *GoBot, update *Update)) {
-	bot.handlers = append(bot.handlers, handler)
+func (bot *GoBot) AddHandler(updateType interface{}, callback func(bot *GoBot, update *Update)) {
+	bot.handlers = append(bot.handlers, Handler{updateType, callback})
 }
 
 func (bot *GoBot) handleUpdate(update *Update) {
 	for _, handler := range bot.handlers {
-		handler(bot, update)
+		value := reflect.ValueOf(update)
+
+		if (handler.updateType == Update{}) || (value.Len() >= 2 && value.Field(1).Type() == handler.updateType && !value.Field(1).IsNil()) {
+			handler.callback(bot, update)
+		}
 	}
 }
 
-// Loop is the function used to start the update loop and their
-// handling process.
 func (bot *GoBot) Loop() error {
 	log.Println("Starting the loop...")
 	offset := 0
@@ -101,7 +106,7 @@ func (bot *GoBot) Loop() error {
 		}
 
 		for _, update := range updates {
-			offset = update.UpdateID + 1
+			offset = update.UpdateId + 1
 			go bot.handleUpdate(update)
 		}
 	}

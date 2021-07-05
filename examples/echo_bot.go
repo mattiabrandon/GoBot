@@ -7,18 +7,10 @@ import (
 )
 
 func main() {
-	bot, err := gobot.Init("TOKEN")
-
-	if err != nil {
-		log.Fatalln(err)
-	}
-	bot.AddHandler(func(bot *gobot.GoBot, update *gobot.Update) {
-		if update.Message == nil {
-			return
-		}
-
+	bot := gobot.Init("TOKEN")
+	bot.AddHandler(gobot.Message{}, func(bot *gobot.GoBot, update *gobot.Update) {
 		if _, err := bot.SendMessage(gobot.SendMessageParams{
-			ChatID:    update.Message.From.ID,
+			ChatId:    update.Message.From.Id,
 			Text:      update.Message.Text,
 			ParseMode: "HTML",
 		}); err != nil {
@@ -26,7 +18,7 @@ func main() {
 		}
 	})
 
-	if err = bot.Loop(); err != nil {
+	if err := bot.Loop(); err != nil {
 		log.Fatalln(err)
 	}
 }

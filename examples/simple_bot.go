@@ -6,8 +6,10 @@ import (
 	"github.com/mattiabrandon/gobot"
 )
 
-func messageHandler(bot *gobot.GoBot, message *gobot.Message) {
-	if message.Text == "/start" {
+func messageHandler(bot *gobot.GoBot, update *gobot.Update) {
+	if update.Message == nil {
+		return
+	} else if update.Message.Text == "/start" {
 		keyboard := [][]*gobot.InlineKeyboardButton{
 			{
 				{
@@ -16,19 +18,19 @@ func messageHandler(bot *gobot.GoBot, message *gobot.Message) {
 				},
 				{
 					Text: "This is Google",
-					URL:  "https://google.it",
+					Url:  "https://google.it",
 				},
 			},
 			{
 				{
 					Text: "This is DuckDuckGo",
-					URL:  "https://duckduckgo.com",
+					Url:  "https://duckduckgo.com",
 				},
 			},
 		}
 
 		if _, err := bot.SendMessage(gobot.SendMessageParams{
-			ChatID:      message.From.ID,
+			ChatId:      update.Message.From.Id,
 			Text:        "<b>Hello World</b>",
 			ReplyMarkup: &gobot.InlineKeyboardMarkup{InlineKeyboard: keyboard},
 		}); err != nil {
@@ -36,7 +38,7 @@ func messageHandler(bot *gobot.GoBot, message *gobot.Message) {
 		}
 	} else {
 		if _, err := bot.SendMessage(gobot.SendMessageParams{
-			ChatID: message.From.ID,
+			ChatId: update.Message.From.Id,
 			Text:   "Unrecognised <i>command</i>, try with /start",
 		}); err != nil {
 			log.Println(err)
@@ -44,8 +46,8 @@ func messageHandler(bot *gobot.GoBot, message *gobot.Message) {
 	}
 }
 
-func callbackQueryHandler(bot *gobot.GoBot, callbackQuery *gobot.CallbackQuery) {
-	if callbackQuery.Data == "/back" {
+func callbackQueryHandler(bot *gobot.GoBot, update *gobot.Update) {
+	if update.CallbackQuery.Data == "/back" {
 		keyboard := [][]*gobot.InlineKeyboardButton{
 			{
 				{
@@ -54,35 +56,35 @@ func callbackQueryHandler(bot *gobot.GoBot, callbackQuery *gobot.CallbackQuery) 
 				},
 				{
 					Text: "That's Google",
-					URL:  "https://google.it",
+					Url:  "https://google.it",
 				},
 			},
 			{
 				{
 					Text: "That's DuckDuckGo",
-					URL:  "https://duckduckgo.com",
+					Url:  "https://duckduckgo.com",
 				},
 			},
 		}
 
 		if _, err := bot.EditMessageText(gobot.EditMessageTextParams{
-			ChatID:      callbackQuery.From.ID,
-			MessageID:   callbackQuery.Message.MessageID,
+			ChatId:      update.CallbackQuery.From.Id,
+			MessageId:   update.CallbackQuery.Message.MessageId,
 			Text:        "<b>Hello World</b>",
 			ParseMode:   "HTML",
 			ReplyMarkup: &gobot.InlineKeyboardMarkup{InlineKeyboard: keyboard},
 		}); err != nil {
 			log.Println(err)
 		}
-	} else if callbackQuery.Data == "/callback" {
+	} else if update.CallbackQuery.Data == "/callback" {
 		keyboard := [][]*gobot.InlineKeyboardButton{{{
 			Text:         "Go back",
 			CallbackData: "/back",
 		}}}
 
 		if _, err := bot.EditMessageText(gobot.EditMessageTextParams{
-			ChatID:      callbackQuery.From.ID,
-			MessageID:   callbackQuery.Message.MessageID,
+			ChatId:      update.CallbackQuery.From.Id,
+			MessageId:   update.CallbackQuery.Message.MessageId,
 			Text:        "This is a cool callback",
 			ParseMode:   "HTML",
 			ReplyMarkup: &gobot.InlineKeyboardMarkup{InlineKeyboard: keyboard},
@@ -93,20 +95,11 @@ func callbackQueryHandler(bot *gobot.GoBot, callbackQuery *gobot.CallbackQuery) 
 }
 
 func main() {
-	bot, err := gobot.Init("TOKEN")
+	bot := gobot.Init("TOKEN")
+	bot.AddHandler(gobot.Message{}, messageHandler)
+	bot.AddHandler(gobot.CallbackQuery{}, callbackQueryHandler)
 
-	if err != nil {
-		log.Fatalln(err)
-	}
-	bot.AddHandler(func(bot *gobot.GoBot, update *gobot.Update) {
-		if update.Message != nil {
-			messageHandler(bot, update.Message)
-		} else if update.CallbackQuery != nil {
-			callbackQueryHandler(bot, update.CallbackQuery)
-		}
-	})
-
-	if err = bot.Loop(); err != nil {
+	if err := bot.Loop(); err != nil {
 		log.Fatalln(err)
 	}
 }
