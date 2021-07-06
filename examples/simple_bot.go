@@ -62,7 +62,7 @@ func callbackQueryHandler(bot *gobot.GoBot, update *gobot.Update) {
 
 func main() {
 	bot := gobot.Init("TOKEN")
-	bot.AddHandler(gobot.Message{}, messageHandler)
-	bot.AddHandler(gobot.CallbackQuery{}, callbackQueryHandler)
+	bot.AddHandler(&gobot.Message{}, messageHandler)
+	bot.AddHandler(&gobot.CallbackQuery{}, callbackQueryHandler)
 	_ = bot.Loop(false)
 }

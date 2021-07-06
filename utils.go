@@ -15,19 +15,13 @@ func NewInlineKeyboardButton(text string, value string, isCallbackData bool) *In
 
 func NewInlineKeyboardRow(values ...*InlineKeyboardButton) []*InlineKeyboardButton {
 	var row []*InlineKeyboardButton
-
-	for _, value := range values {
-		row = append(row, value)
-	}
+	row = append(row, values...)
 	return row
 }
 
 func NewInlineKeyboardMarkup(values ...[]*InlineKeyboardButton) *InlineKeyboardMarkup {
 	keyboard := &InlineKeyboardMarkup{InlineKeyboard: [][]*InlineKeyboardButton{}}
-
-	for _, value := range values {
-		keyboard.InlineKeyboard = append(keyboard.InlineKeyboard, value)
-	}
+	keyboard.InlineKeyboard = append(keyboard.InlineKeyboard, values...)
 	return keyboard
 }
 
@@ -35,6 +29,7 @@ func NewSendMessage(chatId int, text string, replyMarkup interface{}) SendMessag
 	return SendMessageParams{
 		ChatId:      chatId,
 		Text:        text,
+		ParseMode:   "HTML",
 		ReplyMarkup: replyMarkup,
 	}
 }
@@ -43,6 +38,7 @@ func (message *Message) NewSendMessage(text string, replyMarkup interface{}) Sen
 	return SendMessageParams{
 		ChatId:      message.Chat.Id,
 		Text:        text,
+		ParseMode:   "HTML",
 		ReplyMarkup: replyMarkup,
 	}
 }
@@ -52,6 +48,7 @@ func NewEditMessageText(chatId int, messageId int, text string, replyMarkup *Inl
 		ChatId:      chatId,
 		MessageId:   messageId,
 		Text:        text,
+		ParseMode:   "HTML",
 		ReplyMarkup: replyMarkup,
 	}
 }
@@ -61,6 +58,7 @@ func (message *Message) NewEditMessageText(text string, replyMarkup *InlineKeybo
 		ChatId:      message.Chat.Id,
 		MessageId:   message.MessageId,
 		Text:        text,
+		ParseMode:   "HTML",
 		ReplyMarkup: replyMarkup,
 	}
 }

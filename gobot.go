@@ -17,9 +17,11 @@ type GoBot struct {
 }
 
 type Handler struct {
-	updateType interface{}
+	updateType reflect.Type
 	callback   func(bot *GoBot, update *Update)
 }
+
+var updateTypeUpdate = reflect.TypeOf(&Update{})
 
 func Init(token string) *GoBot {
 	log.Println("Copyright (c) 2020 Mattia Brandon <https://github.com/mattiabrandon>")
@@ -79,15 +81,25 @@ func (bot *GoBot) Request(method string, params interface{}) (json.RawMessage, e
 }
 
 func (bot *GoBot) AddHandler(updateType interface{}, callback func(bot *GoBot, update *Update)) {
-	bot.handlers = append(bot.handlers, Handler{updateType, callback})
+	if reflect.ValueOf(updateType).Type().Kind() != reflect.Ptr {
+		panic("Update type must be a pointer")
+	}
+	bot.handlers = append(bot.handlers, Handler{reflect.TypeOf(updateType), callback})
 }
 
 func (bot *GoBot) handleUpdate(update *Update) {
 	for _, handler := range bot.handlers {
-		value := reflect.ValueOf(update)
-
-		if (handler.updateType == Update{}) || (value.Len() >= 2 && value.Field(1).Type() == handler.updateType && !value.Field(1).IsNil()) {
+		if handler.updateType == updateTypeUpdate {
 			handler.callback(bot, update)
+			continue
+		}
+		v := reflect.Indirect(reflect.ValueOf(update))
+
+		for i := 1; i < v.NumField(); i++ {
+			if v.Field(i).Type() == handler.updateType && !v.Field(i).IsNil() {
+				handler.callback(bot, update)
+				break
+			}
 		}
 	}
 }
