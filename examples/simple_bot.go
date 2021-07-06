@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/mattiabrandon/gobot"
 )
 
@@ -17,15 +18,20 @@ func messageHandler(bot *gobot.GoBot, update *gobot.Update) {
 				gobot.NewInlineKeyboardButton("This is DuckDuckGo", "https://duckduckgo.com", false),
 			),
 		)
-		_, _ = bot.SendMessage(message.NewSendMessage(
+
+		if _, err := bot.SendMessage(message.NewSendMessage(
 			"<b>Hello World</b>",
 			keyboard,
-		))
+		)); err != nil {
+			fmt.Println(err)
+		}
 	} else {
-		_, _ = bot.SendMessage(message.NewSendMessage(
+		if _, err := bot.SendMessage(message.NewSendMessage(
 			"Unrecognised <i>command</i>, try with /start",
 			nil,
-		))
+		)); err != nil {
+			fmt.Println(err)
+		}
 	}
 }
 
@@ -42,22 +48,31 @@ func callbackQueryHandler(bot *gobot.GoBot, update *gobot.Update) {
 				gobot.NewInlineKeyboardButton("This is DuckDuckGo", "https://duckduckgo.com", false),
 			),
 		)
-		_, _ = bot.EditMessageText(callbackQuery.Message.NewEditMessageText(
+
+		if _, err := bot.EditMessageText(callbackQuery.Message.NewEditMessageText(
 			"<b>Hello World</b>",
 			keyboard,
-		))
+		)); err != nil {
+			fmt.Println(err)
+		}
 	} else if update.CallbackQuery.Data == "/callback" {
 		keyboard := gobot.NewInlineKeyboardMarkup(gobot.NewInlineKeyboardRow(gobot.NewInlineKeyboardButton(
 			"Go back",
 			"/back",
 			true,
 		)))
-		_, _ = bot.EditMessageText(callbackQuery.Message.NewEditMessageText(
+
+		if _, err := bot.EditMessageText(callbackQuery.Message.NewEditMessageText(
 			"This is a cool callback",
 			keyboard,
-		))
+		)); err != nil {
+			fmt.Println(err)
+		}
 	}
-	_, _ = bot.AnswerCallbackQuery(callbackQuery.NewAnswerCallbackQuery("", false))
+
+	if _, err := bot.AnswerCallbackQuery(callbackQuery.NewAnswerCallbackQuery("", false)); err != nil {
+		fmt.Println(err)
+	}
 }
 
 func main() {
