@@ -70,9 +70,9 @@ func (bot *GoBot) Request(method string, params interface{}) (json.RawMessage, e
 		return nil, err
 	} else if !decodedBody.Ok {
 		return nil, &Error{
-			Description:        decodedBody.Description,
-			ErrorCode:          decodedBody.ErrorCode,
-			ResponseParameters: decodedBody.ResponseParameters,
+			Description: decodedBody.Description,
+			ErrorCode:   decodedBody.ErrorCode,
+			Parameters:  decodedBody.Parameters,
 		}
 	}
 	return decodedBody.Result, nil
