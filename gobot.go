@@ -2,6 +2,7 @@ package gobot
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"reflect"
 
@@ -91,7 +92,7 @@ func (bot *GoBot) handleUpdate(update *Update) {
 	}
 }
 
-func (bot *GoBot) Loop() error {
+func (bot *GoBot) Loop(returnError bool) error {
 	log.Println("Starting the loop...")
 	offset := 0
 
@@ -102,7 +103,10 @@ func (bot *GoBot) Loop() error {
 		})
 
 		if err != nil {
-			return err
+			if returnError {
+				return err
+			}
+			fmt.Println(err)
 		}
 
 		for _, update := range updates {

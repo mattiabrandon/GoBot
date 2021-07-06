@@ -1,105 +1,68 @@
 package main
 
 import (
-	"log"
-
 	"github.com/mattiabrandon/gobot"
 )
 
 func messageHandler(bot *gobot.GoBot, update *gobot.Update) {
-	if update.Message == nil {
-		return
-	} else if update.Message.Text == "/start" {
-		keyboard := [][]*gobot.InlineKeyboardButton{
-			{
-				{
-					Text:         "I'm a button",
-					CallbackData: "/callback",
-				},
-				{
-					Text: "This is Google",
-					Url:  "https://google.it",
-				},
-			},
-			{
-				{
-					Text: "This is DuckDuckGo",
-					Url:  "https://duckduckgo.com",
-				},
-			},
-		}
+	message := update.Message
 
-		if _, err := bot.SendMessage(gobot.SendMessageParams{
-			ChatId:      update.Message.From.Id,
-			Text:        "<b>Hello World</b>",
-			ReplyMarkup: &gobot.InlineKeyboardMarkup{InlineKeyboard: keyboard},
-		}); err != nil {
-			log.Println(err)
-		}
+	if message.Text == "/start" {
+		keyboard := gobot.NewInlineKeyboardMarkup(
+			gobot.NewInlineKeyboardRow(
+				gobot.NewInlineKeyboardButton("I'm a button", "/callback", true),
+				gobot.NewInlineKeyboardButton("This is Google", "https://google.it", false),
+			),
+			gobot.NewInlineKeyboardRow(
+				gobot.NewInlineKeyboardButton("This is DuckDuckGo", "https://duckduckgo.com", false),
+			),
+		)
+		_, _ = bot.SendMessage(message.NewSendMessage(
+			"<b>Hello World</b>",
+			keyboard,
+		))
 	} else {
-		if _, err := bot.SendMessage(gobot.SendMessageParams{
-			ChatId: update.Message.From.Id,
-			Text:   "Unrecognised <i>command</i>, try with /start",
-		}); err != nil {
-			log.Println(err)
-		}
+		_, _ = bot.SendMessage(message.NewSendMessage(
+			"Unrecognised <i>command</i>, try with /start",
+			nil,
+		))
 	}
 }
 
 func callbackQueryHandler(bot *gobot.GoBot, update *gobot.Update) {
-	if update.CallbackQuery.Data == "/back" {
-		keyboard := [][]*gobot.InlineKeyboardButton{
-			{
-				{
-					Text:         "I'm a button",
-					CallbackData: "/callback",
-				},
-				{
-					Text: "That's Google",
-					Url:  "https://google.it",
-				},
-			},
-			{
-				{
-					Text: "That's DuckDuckGo",
-					Url:  "https://duckduckgo.com",
-				},
-			},
-		}
+	callbackQuery := update.CallbackQuery
 
-		if _, err := bot.EditMessageText(gobot.EditMessageTextParams{
-			ChatId:      update.CallbackQuery.From.Id,
-			MessageId:   update.CallbackQuery.Message.MessageId,
-			Text:        "<b>Hello World</b>",
-			ParseMode:   "HTML",
-			ReplyMarkup: &gobot.InlineKeyboardMarkup{InlineKeyboard: keyboard},
-		}); err != nil {
-			log.Println(err)
-		}
+	if callbackQuery.Data == "/back" {
+		keyboard := gobot.NewInlineKeyboardMarkup(
+			gobot.NewInlineKeyboardRow(
+				gobot.NewInlineKeyboardButton("I'm a button", "/callback", true),
+				gobot.NewInlineKeyboardButton("This is Google", "https://google.it", false),
+			),
+			gobot.NewInlineKeyboardRow(
+				gobot.NewInlineKeyboardButton("This is DuckDuckGo", "https://duckduckgo.com", false),
+			),
+		)
+		_, _ = bot.EditMessageText(callbackQuery.Message.NewEditMessageText(
+			"<b>Hello World</b>",
+			keyboard,
+		))
 	} else if update.CallbackQuery.Data == "/callback" {
-		keyboard := [][]*gobot.InlineKeyboardButton{{{
-			Text:         "Go back",
-			CallbackData: "/back",
-		}}}
-
-		if _, err := bot.EditMessageText(gobot.EditMessageTextParams{
-			ChatId:      update.CallbackQuery.From.Id,
-			MessageId:   update.CallbackQuery.Message.MessageId,
-			Text:        "This is a cool callback",
-			ParseMode:   "HTML",
-			ReplyMarkup: &gobot.InlineKeyboardMarkup{InlineKeyboard: keyboard},
-		}); err != nil {
-			log.Println(err)
-		}
+		keyboard := gobot.NewInlineKeyboardMarkup(gobot.NewInlineKeyboardRow(gobot.NewInlineKeyboardButton(
+			"Go back",
+			"/back",
+			true,
+		)))
+		_, _ = bot.EditMessageText(callbackQuery.Message.NewEditMessageText(
+			"This is a cool callback",
+			keyboard,
+		))
 	}
+	_, _ = bot.AnswerCallbackQuery(callbackQuery.NewAnswerCallbackQuery("", false))
 }
 
 func main() {
 	bot := gobot.Init("TOKEN")
 	bot.AddHandler(gobot.Message{}, messageHandler)
 	bot.AddHandler(gobot.CallbackQuery{}, callbackQueryHandler)
-
-	if err := bot.Loop(); err != nil {
-		log.Fatalln(err)
-	}
+	_ = bot.Loop(false)
 }
